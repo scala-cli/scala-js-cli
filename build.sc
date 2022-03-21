@@ -8,44 +8,47 @@ import io.github.alexarchambault.millnativeimage.upload.Upload
 import mill._
 import mill.scalalib._
 
-def scalafmtVersion = "3.4.3"
+def scalaJsCliVersion = "1.1.1-sc1"
 
-trait ScalafmtNativeImage extends ScalaModule with NativeImage {
+trait ScalaJsCliNativeImage extends ScalaModule with NativeImage {
   def scalaVersion = "2.13.8"
+  def scalaJsVersion = "1.9.0"
 
   def nativeImageClassPath = T{
     runClasspath()
   }
   def nativeImageOptions = T{
     super.nativeImageOptions() ++ Seq(
-      "--no-fallback"
+      "--no-fallback",
+      "-H:IncludeResources=org/scalajs/linker/backend/emitter/.*.sjsir"
     )
   }
   def nativeImagePersist = System.getenv("CI") != null
   def nativeImageGraalVmJvmId = "graalvm-java17:22.0.0"
-  def nativeImageName = "scalafmt"
+  def nativeImageName = "scala-js-ld"
   def ivyDeps = super.ivyDeps() ++ Seq(
-    ivy"org.scalameta::scalafmt-cli:$scalafmtVersion"
+    ivy"io.github.alexarchambault.tmp::scalajs-cli:$scalaJsCliVersion",
+    ivy"org.scala-js::scalajs-linker:$scalaJsVersion"
   )
-  def nativeImageMainClass = "org.scalafmt.cli.Cli"
+  def nativeImageMainClass = "org.scalajs.cli.Scalajsld"
 
   def nameSuffix = ""
   def copyToArtifacts(directory: String = "artifacts/") = T.command {
     val _ = Upload.copyLauncher(
       nativeImage().path,
       directory,
-      "scalafmt",
+      s"scala-js-ld-$scalaJsVersion",
       compress = true,
       suffix = nameSuffix
     )
   }
 }
 
-object native extends ScalafmtNativeImage
+object native extends ScalaJsCliNativeImage
 
 def csDockerVersion = "2.1.0-M5-18-gfebf9838c"
 
-object `native-static` extends ScalafmtNativeImage {
+object `native-static` extends ScalaJsCliNativeImage {
   def nameSuffix = "-static"
   def buildHelperImage = T {
     os.proc("docker", "build", "-t", "scala-cli-base-musl:latest", ".")
@@ -67,7 +70,7 @@ object `native-static` extends ScalafmtNativeImage {
   }
 }
 
-object `native-mostly-static` extends ScalafmtNativeImage {
+object `native-mostly-static` extends ScalaJsCliNativeImage {
   def nameSuffix = "-mostly-static"
   def nativeImageDockerParams = Some(
     NativeImage.linuxMostlyStaticParams(
@@ -114,5 +117,5 @@ def upload(directory: String = "artifacts/") = T.command {
     if (version.endsWith("-SNAPSHOT")) ("launchers", true)
     else ("v" + version, false)
 
-  Upload.upload("scala-cli", "scalafmt-native-image", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+  Upload.upload("scala-cli", "scala-js-cli-native-image", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
 }
