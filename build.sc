@@ -9,10 +9,11 @@ import mill._
 import mill.scalalib._
 
 def scalaJsCliVersion = "1.1.1-sc1"
+def scalaJsVersions = Seq("1.9.0", "1.10.0")
 
-trait ScalaJsCliNativeImage extends ScalaModule with NativeImage {
+class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
   def scalaVersion = "2.13.8"
-  def scalaJsVersion = "1.9.0"
+  def scalaJsVersion = scalaJsVersion0
 
   def nativeImageClassPath = T{
     runClasspath()
@@ -44,11 +45,11 @@ trait ScalaJsCliNativeImage extends ScalaModule with NativeImage {
   }
 }
 
-object native extends ScalaJsCliNativeImage
+object native extends Cross[ScalaJsCliNativeImage](scalaJsVersions: _*)
 
 def csDockerVersion = "2.1.0-M5-18-gfebf9838c"
 
-object `native-static` extends ScalaJsCliNativeImage {
+class ScalaJsCliStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
   def nameSuffix = "-static"
   def buildHelperImage = T {
     os.proc("docker", "build", "-t", "scala-cli-base-musl:latest", ".")
@@ -69,8 +70,9 @@ object `native-static` extends ScalaJsCliNativeImage {
     super.writeNativeImageScript(scriptDest, imageDest)()
   }
 }
+object `native-static` extends Cross[ScalaJsCliStaticNativeImage](scalaJsVersions: _*)
 
-object `native-mostly-static` extends ScalaJsCliNativeImage {
+class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
   def nameSuffix = "-mostly-static"
   def nativeImageDockerParams = Some(
     NativeImage.linuxMostlyStaticParams(
@@ -79,6 +81,7 @@ object `native-mostly-static` extends ScalaJsCliNativeImage {
     )
   )
 }
+object `native-mostly-static` extends Cross[ScalaJsCliMostlyStaticNativeImage](scalaJsVersions: _*)
 
 
 def publishVersion = T{
