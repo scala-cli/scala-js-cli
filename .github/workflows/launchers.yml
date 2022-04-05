@@ -13,6 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-2016, macos-latest]
+        scalaJsVersion: ["1.9.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -23,16 +24,20 @@ jobs:
         with:
           jvm: 8
       - run: |
-          ./mill -i "native.writeNativeImageScript" generate.sh "" && \
+          ./mill -i "native[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native.copyToArtifacts" artifacts/
+          ./mill -i "native[$scalaJsVersion].copyToArtifacts" artifacts/
         if: runner.os != 'Windows'
+        env:
+          scalaJsVersion: ${{ matrix.scalaJsVersion }}
       - run: |
-          @call ./mill.bat -i "native.writeNativeImageScript" generate.bat ""
+          @call ./mill.bat -i "native[%scalaJsVersion%].writeNativeImageScript" generate.bat ""
           @call generate.bat
-          @call ./mill.bat -i "native.copyToArtifacts" artifacts/
+          @call ./mill.bat -i "native[%scalaJsVersion%].copyToArtifacts" artifacts/
         shell: cmd
         if: runner.os == 'Windows'
+        env:
+          scalaJsVersion: ${{ matrix.scalaJsVersion }}
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: launcher-${{ matrix.os }}
@@ -46,6 +51,10 @@ jobs:
 
   generate-static-launcher:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scalaJsVersion: ["1.9.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -56,9 +65,11 @@ jobs:
         with:
           jvm: 8
       - run: |
-          ./mill -i "native-static.writeNativeImageScript" generate.sh "" && \
+          ./mill -i "native-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native-static.copyToArtifacts" artifacts/
+          ./mill -i "native-static[$scalaJsVersion].copyToArtifacts" artifacts/
+        env:
+          scalaJsVersion: ${{ matrix.scalaJsVersion }}
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: launcher-${{ matrix.os }}-static
@@ -72,6 +83,10 @@ jobs:
 
   generate-mostly-static-launcher:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scalaJsVersion: ["1.9.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -82,9 +97,11 @@ jobs:
         with:
           jvm: 8
       - run: |
-          ./mill -i "native-mostly-static.writeNativeImageScript" generate.sh "" && \
+          ./mill -i "native-mostly-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native-mostly-static.copyToArtifacts" artifacts/
+          ./mill -i "native-mostly-static[$scalaJsVersion].copyToArtifacts" artifacts/
+        env:
+          scalaJsVersion: ${{ matrix.scalaJsVersion }}
       - uses: actions/upload-artifact@v2.2.4
         with:
           name: launcher-${{ matrix.os }}-mostly-static
