@@ -8,7 +8,7 @@ import io.github.alexarchambault.millnativeimage.upload.Upload
 import mill._
 import mill.scalalib._
 
-def scalaJsCliVersion = "1.1.1-sc1"
+def scalaJsCliVersion = "1.1.1-sc3"
 def scalaJsVersions = Seq("1.9.0", "1.10.0")
 
 class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
