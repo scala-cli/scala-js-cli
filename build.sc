@@ -21,7 +21,9 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def nativeImageOptions = T{
     super.nativeImageOptions() ++ Seq(
       "--no-fallback",
-      "-H:IncludeResources=org/scalajs/linker/backend/emitter/.*.sjsir"
+      "-H:IncludeResources=org/scalajs/linker/backend/emitter/.*.sjsir",
+      "-H:IncludeResources=com/google/javascript/jscomp/js/polyfills.txt",
+      "-H:IncludeResourceBundles=com.google.javascript.jscomp.parsing.ParserConfig",
     )
   }
   def nativeImagePersist = System.getenv("CI") != null
