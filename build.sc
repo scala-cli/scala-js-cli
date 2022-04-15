@@ -30,7 +30,9 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def nativeImageGraalVmJvmId = "graalvm-java17:22.0.0"
   def nativeImageName = "scala-js-ld"
   def ivyDeps = super.ivyDeps() ++ Seq(
-    ivy"io.github.alexarchambault.tmp::scalajs-cli:$scalaJsCliVersion",
+    ivy"io.github.alexarchambault.tmp::scalajs-cli:$scalaJsCliVersion"
+      // so that this doesn't bump the version we pull ourselves
+      .exclude(("org.scala-js", "scalajs-linker_2.13")),
     ivy"org.scala-js::scalajs-linker:$scalaJsVersion"
   )
   def nativeImageMainClass = "org.scalajs.cli.Scalajsld"
