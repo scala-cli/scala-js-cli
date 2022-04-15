@@ -7,13 +7,21 @@ import io.github.alexarchambault.millnativeimage.NativeImage
 import io.github.alexarchambault.millnativeimage.upload.Upload
 import mill._
 import mill.scalalib._
+import coursier.core.Version
 
-def scalaJsCliVersion = "1.1.1-sc3"
+def scalaJsCliVersion = "1.1.1-sc4.1"
 def scalaJsVersions = Seq("1.9.0", "1.10.0")
 
 class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
   def scalaVersion = "2.13.8"
   def scalaJsVersion = scalaJsVersion0
+
+  def sources = T.sources {
+    val extra =
+      if (Version(scalaJsVersion) < Version("1.10")) Nil
+      else Seq(PathRef(os.pwd / "scala-js-1.10+" / "src"))
+    super.sources() ++ extra
+  }
 
   def nativeImageClassPath = T{
     runClasspath()
@@ -27,11 +35,17 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
     )
   }
   def nativeImagePersist = System.getenv("CI") != null
-  def nativeImageGraalVmJvmId = "graalvm-java17:22.0.0"
+  def graalVmVersion = "22.0.0"
+  def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def ivyDeps = super.ivyDeps() ++ Seq(
-    ivy"io.github.alexarchambault.tmp::scalajs-cli:$scalaJsCliVersion",
+    ivy"io.github.alexarchambault.tmp::scalajs-cli:$scalaJsCliVersion"
+      // so that this doesn't bump the version we pull ourselves
+      .exclude(("org.scala-js", "scalajs-linker_2.13")),
     ivy"org.scala-js::scalajs-linker:$scalaJsVersion"
+  )
+  def compileIvyDeps = super.compileIvyDeps() ++ Seq(
+    ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
   )
   def nativeImageMainClass = "org.scalajs.cli.Scalajsld"
 
