@@ -22,7 +22,7 @@ jobs:
       - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1.2.0-M3
         with:
-          jvm: 8
+          jvm: temurin:17
       - run: |
           ./mill -i "native[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
@@ -63,7 +63,7 @@ jobs:
       - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1.2.0-M3
         with:
-          jvm: 8
+          jvm: temurin:17
       - run: |
           ./mill -i "native-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
@@ -95,7 +95,7 @@ jobs:
       - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1.2.0-M3
         with:
-          jvm: 8
+          jvm: temurin:17
       - run: |
           ./mill -i "native-mostly-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
