@@ -9,7 +9,7 @@ import mill._
 import mill.scalalib._
 import coursier.core.Version
 
-def scalaJsCliVersion = "1.1.1-sc4.1"
+def scalaJsCliVersion = "1.1.1-sc5"
 def scalaJsVersions = Seq("1.9.0", "1.10.0")
 
 class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
