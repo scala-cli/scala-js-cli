@@ -16,13 +16,6 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def scalaVersion = "2.13.8"
   def scalaJsVersion = scalaJsVersion0
 
-  def sources = T.sources {
-    val extra =
-      if (Version(scalaJsVersion) < Version("1.10")) Nil
-      else Seq(PathRef(os.pwd / "scala-js-1.10+" / "src"))
-    super.sources() ++ extra
-  }
-
   def nativeImageClassPath = T{
     runClasspath()
   }
