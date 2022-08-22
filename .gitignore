@@ -1,1 +1,5 @@
+target/
+/.bsp/
+/pack/
+/cli-test/
 out/
