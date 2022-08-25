@@ -11,6 +11,7 @@ import mill.scalalib._
 import coursier.core.Version
 
 import scala.concurrent.duration._
+import scala.util.Properties.isWin
 
 
 def scalaJsCliVersion = "1.1.1-sc5"
@@ -18,7 +19,7 @@ def scala213 = "2.13.8"
 def latestScalaJsVersion = "1.10.1"
 def scalaJsVersions = Seq("1.9.0", "1.10.0", latestScalaJsVersion)
 
-object cli extends Cli(latestScalaJsVersion)
+object cli extends Cross[Cli](scalaJsVersions: _*)
 
 class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublishModule {
   def scalaVersion = scala213
@@ -26,7 +27,7 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
     ivy"org.scala-js::scalajs-linker:$scalaJsVersion0",
     ivy"com.github.scopt::scopt:4.1.0"
   )
-  def millSourcePath   = super.millSourcePath / os.up / "cli"
+  def millSourcePath   = super.millSourcePath / os.up
 
   def mainClass = Some("org.scalajs.cli.Scalajsld")
 
@@ -75,7 +76,6 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
       Parameters,
       Preamble
     }
-    import scala.util.Properties.isWin
     val cp = jarClassPath().map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
@@ -124,7 +124,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def moduleDeps() = Seq(
-    new Cli(scalaJsVersion0)
+    cli(scalaJsVersion0)
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Seq(
     ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
@@ -140,6 +140,15 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
       compress = true,
       suffix = nameSuffix
     )
+  }
+
+  def testNative() = T.command {
+    val path = nativeImage().path
+    System.err.println(s"Testing ${path.relativeTo(os.pwd)}")
+    val cwd = T.dest / "workdir"
+    os.makeDir.all(cwd)
+    os.proc(bash, os.pwd / "scripts" / "test-cli.sh", path)
+      .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
   }
 }
 
@@ -331,12 +340,25 @@ object ci extends Module {
 
     Upload.upload("scala-cli", "scala-js-cli-native-image", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
   }
+
+  def testCli() = {
+    val tasks = scalaJsVersions.map { scalaJsVer =>
+      cli(scalaJsVer).standaloneLauncher.map((scalaJsVer, _))
+    }
+    T.command {
+      val workDir = T.dest
+      val launchers = T.sequence(tasks)()
+      for ((scalaJsVer, launcher) <- launchers) {
+        System.err.println(s"Testing Scala.JS $scalaJsVer")
+        val cwd = workDir / scalaJsVer
+        os.makeDir.all(cwd)
+        os.proc(bash, os.pwd / "scripts" / "test-cli.sh", launcher.path)
+          .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
+      }
+    }
+  }
 }
 
-def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
-  if (task.value.length > 1)
-    sys.error("Expected a single task")
-  val ref = task.value.head()
-  os.makeDir.all(dest / os.up)
-  os.copy.over(ref.path, dest)
-}
+private def bash =
+  if (isWin) Seq("bash.exe")
+  else Nil
