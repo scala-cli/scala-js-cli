@@ -1,4 +1,4 @@
-name: Launchers
+name: CI
 on:
   push:
     branches:
@@ -6,8 +6,44 @@ on:
     tags:
       - "v*"
   pull_request:
+
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: VirtusLab/scala-cli-setup@0dab3c3ec860f0443d4d25a56a549f9f46204389
+        with:
+          jvm: "temurin:17"
+      - name: Test CLI
+        run: ./mill -i ci.testCli
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: VirtusLab/scala-cli-setup@0dab3c3ec860f0443d4d25a56a549f9f46204389
+        with:
+          jvm: "temurin:17"
+      - run: ./mill -i ci.publishSonatype __.publishArtifacts
+        env:
+          PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+
   generate-launchers:
+    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -26,6 +62,7 @@ jobs:
       - run: |
           ./mill -i "native[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
+          ./mill -i "native[$scalaJsVersion].testNative" && \
           ./mill -i "native[$scalaJsVersion].copyToArtifacts" artifacts/
         if: runner.os != 'Windows'
         env:
@@ -33,6 +70,7 @@ jobs:
       - run: |
           @call ./mill.bat -i "native[%scalaJsVersion%].writeNativeImageScript" generate.bat ""
           @call generate.bat
+          @call ./mill.bat -i "native[%scalaJsVersion%].testNative"
           @call ./mill.bat -i "native[%scalaJsVersion%].copyToArtifacts" artifacts/
         shell: cmd
         if: runner.os == 'Windows'
@@ -44,12 +82,13 @@ jobs:
           path: artifacts/
           if-no-files-found: error
           retention-days: 1
-      - run: ./mill -i upload artifacts/
+      - run: ./mill -i ci.upload artifacts/
         if: github.event_name == 'push'
         env:
           UPLOAD_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   generate-static-launcher:
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -67,6 +106,7 @@ jobs:
       - run: |
           ./mill -i "native-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
+          ./mill -i "native-static[$scalaJsVersion].testNative" && \
           ./mill -i "native-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
@@ -82,6 +122,7 @@ jobs:
           UPLOAD_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   generate-mostly-static-launcher:
+    needs: test
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -99,6 +140,7 @@ jobs:
       - run: |
           ./mill -i "native-mostly-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
+          ./mill -i "native-mostly-static[$scalaJsVersion].testNative" && \
           ./mill -i "native-mostly-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
