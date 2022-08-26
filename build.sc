@@ -23,6 +23,7 @@ object cli extends Cross[Cli](scalaJsVersions: _*)
 
 class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublishModule {
   def scalaVersion = scala213
+  def artifactName = "scalajs" + super.artifactName()
   def ivyDeps = super.ivyDeps() ++ Seq(
     ivy"org.scala-js::scalajs-linker:$scalaJsVersion0",
     ivy"com.github.scopt::scopt:4.1.0"
