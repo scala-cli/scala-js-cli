@@ -35,9 +35,11 @@ jobs:
       - uses: VirtusLab/scala-cli-setup@0dab3c3ec860f0443d4d25a56a549f9f46204389
         with:
           jvm: "temurin:17"
-      - run: ./mill -i ci.publishSonatype __.publishArtifacts
+      - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
+      - run: ./mill -i ci.publishSonatype __.publishArtifacts
+        env:
           PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.PUBLISH_USER }}
           SONATYPE_PASSWORD: ${{ secrets.PUBLISH_PASSWORD }}
