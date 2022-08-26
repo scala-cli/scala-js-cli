@@ -283,7 +283,7 @@ object ci extends Module {
   ): Unit = {
 
     val credentials = sys.env("SONATYPE_USERNAME") + ":" + sys.env("SONATYPE_PASSWORD")
-    val pgpPassword = sys.env("PGP_PASSWORD")
+    val pgpPassword = sys.env("PGP_PASSPHRASE")
     val timeout = 10.minutes
 
     val artifacts = data.map { case PublishModule.PublishData(a, s) =>
