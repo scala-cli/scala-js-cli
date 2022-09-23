@@ -148,7 +148,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
     System.err.println(s"Testing ${path.relativeTo(os.pwd)}")
     val cwd = T.dest / "workdir"
     os.makeDir.all(cwd)
-    os.proc(bash, os.pwd / "scripts" / "test-cli.sh", path)
+    os.proc(bash, os.pwd / "scripts" / "test-cli.sh", path, scalaJsVersion)
       .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
   }
 }
@@ -353,7 +353,7 @@ object ci extends Module {
         System.err.println(s"Testing Scala.JS $scalaJsVer")
         val cwd = workDir / scalaJsVer
         os.makeDir.all(cwd)
-        os.proc(bash, os.pwd / "scripts" / "test-cli.sh", launcher.path)
+        os.proc(bash, os.pwd / "scripts" / "test-cli.sh", launcher.path, scalaJsVer)
           .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
       }
     }
