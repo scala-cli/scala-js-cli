@@ -339,7 +339,7 @@ object ci extends Module {
       if (version.endsWith("-SNAPSHOT")) ("launchers", true)
       else ("v" + version, false)
 
-    Upload.upload("scala-cli", "scala-js-cli-native-image", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
   }
 
   def testCli() = {
