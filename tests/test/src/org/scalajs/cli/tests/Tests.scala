@@ -26,6 +26,8 @@ class Tests extends munit.FunSuite {
         |""".stripMargin
     )
 
+    val scalaJsLibraryCp = os.proc("cs", "fetch", "--classpath", "-E", "org.scala-lang:scala-library", s"org.scala-js::scalajs-library:$scalaJsVersion").call(cwd = dir).out.trim()
+
     os.makeDir.all(dir / "bin")
     os.proc(
       "cs",
@@ -33,7 +35,7 @@ class Tests extends munit.FunSuite {
       "scalac:2.13.6",
       "--",
       "-classpath",
-      os.proc("cs", "fetch", "--intransitive", s"org.scala-js::scalajs-library:$scalaJsVersion").call(cwd = dir).out.trim(),
+      scalaJsLibraryCp,
       s"-Xplugin:${os.proc("cs", "fetch", "--intransitive", s"org.scala-js:scalajs-compiler_2.13.6:$scalaJsVersion").call(cwd = dir).out.trim()}",
       "-d", "bin", "foo.scala"
     ).call(cwd = dir, stdin = os.Inherit, stdout = os.Inherit)
@@ -41,7 +43,7 @@ class Tests extends munit.FunSuite {
     val res = os.proc(
       launcher,
       "--stdlib",
-      os.proc("cs", "fetch", "--intransitive", s"org.scala-js::scalajs-library:$scalaJsVersion").call(cwd = dir).out.trim(),
+      scalaJsLibraryCp,
       "-s", "-o", "test.js", "-mm", "Foo.main", "bin"
     ).call(cwd = dir, stderr = os.Pipe)
     val expectedInOutput = "Warning: using a single file as output (--output) is deprecated since Scala.js 1.3.0. Use --outputDir instead."
@@ -60,7 +62,7 @@ class Tests extends munit.FunSuite {
     os.proc(
       launcher,
       "--stdlib",
-      os.proc("cs", "fetch", "--intransitive", s"org.scala-js::scalajs-library:$scalaJsVersion").call(cwd = dir).out.trim(),
+      scalaJsLibraryCp,
       "-s",
       "--outputDir",
       "test-output",
