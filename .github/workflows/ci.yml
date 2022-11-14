@@ -21,7 +21,7 @@ jobs:
         with:
           jvm: "temurin:17"
       - name: Test CLI
-        run: ./mill -i ci.testCli
+        run: ./mill -i 'tests[_].test'
 
   publish:
     needs: test
@@ -64,7 +64,7 @@ jobs:
       - run: |
           ./mill -i "native[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native[$scalaJsVersion].testNative" && \
+          ./mill -i "tests[$scalaJsVersion].native" && \
           ./mill -i "native[$scalaJsVersion].copyToArtifacts" artifacts/
         if: runner.os != 'Windows'
         env:
@@ -72,7 +72,7 @@ jobs:
       - run: |
           @call ./mill.bat -i "native[%scalaJsVersion%].writeNativeImageScript" generate.bat ""
           @call generate.bat
-          @call ./mill.bat -i "native[%scalaJsVersion%].testNative"
+          @call ./mill.bat -i "tests[%scalaJsVersion%].native"
           @call ./mill.bat -i "native[%scalaJsVersion%].copyToArtifacts" artifacts/
         shell: cmd
         if: runner.os == 'Windows'
@@ -108,7 +108,7 @@ jobs:
       - run: |
           ./mill -i "native-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native-static[$scalaJsVersion].testNative" && \
+          ./mill -i "tests[$scalaJsVersion].nativeStatic" && \
           ./mill -i "native-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
@@ -142,7 +142,7 @@ jobs:
       - run: |
           ./mill -i "native-mostly-static[$scalaJsVersion].writeNativeImageScript" generate.sh "" && \
           ./generate.sh && \
-          ./mill -i "native-mostly-static[$scalaJsVersion].testNative" && \
+          ./mill -i "tests[$scalaJsVersion].nativeStatic" && \
           ./mill -i "native-mostly-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
