@@ -10,6 +10,8 @@ import mill._
 import mill.scalalib._
 import coursier.core.Version
 
+import java.io.File
+
 import scala.concurrent.duration._
 import scala.util.Properties.isWin
 
@@ -142,18 +144,11 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
       suffix = nameSuffix
     )
   }
-
-  def testNative() = T.command {
-    val path = nativeImage().path
-    System.err.println(s"Testing ${path.relativeTo(os.pwd)}")
-    val cwd = T.dest / "workdir"
-    os.makeDir.all(cwd)
-    os.proc(bash, os.pwd / "scripts" / "test-cli.sh", path, scalaJsVersion)
-      .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
-  }
 }
 
 object native extends Cross[ScalaJsCliNativeImage](scalaJsVersions: _*)
+
+def native0 = native
 
 def csDockerVersion = "2.1.0-M5-18-gfebf9838c"
 
@@ -190,6 +185,67 @@ class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJs
   )
 }
 object `native-mostly-static` extends Cross[ScalaJsCliMostlyStaticNativeImage](scalaJsVersions: _*)
+
+object tests extends Cross[Tests](scalaJsVersions: _*)
+class Tests(val scalaJsVersion0: String) extends ScalaModule {
+  def scalaVersion = scala213
+
+  object test extends Tests {
+    def ivyDeps = super.ivyDeps() ++ Seq(
+      ivy"org.scalameta::munit:0.7.29",
+      ivy"com.lihaoyi::os-lib:0.8.1",
+      ivy"com.lihaoyi::pprint:0.8.0"
+    )
+    def testFramework = "munit.Framework"
+
+    private final class TestHelper(
+      launcherTask: T[PathRef]
+    ) {
+      def test(args: String*) = {
+        val argsTask = T.task {
+          val launcher = launcherTask().path
+          val extraArgs = Seq(
+            s"-Dtest.scala-js-cli.path=$launcher",
+            s"-Dtest.scala-js-cli.scala-js-version=$scalaJsVersion0"
+          )
+          args ++ extraArgs
+        }
+        T.command {
+          testTask(argsTask, T.task(Seq.empty[String]))()
+        }
+      }
+    }
+
+    def test(args: String*) =
+      jvm(args: _*)
+    def jvm(args: String*) =
+      new TestHelper(cli(scalaJsVersion0).standaloneLauncher).test(args: _*)
+    def native(args: String*) =
+      new TestHelper(native0(scalaJsVersion0).nativeImage).test(args: _*)
+    def nativeStatic(args: String*) =
+      new TestHelper(`native-static`(scalaJsVersion0).nativeImage).test(args: _*)
+    def nativeMostlyStatic(args: String*) =
+      new TestHelper(`native-mostly-static`(scalaJsVersion0).nativeImage).test(args: _*)
+
+    private def updateRef(ref: PathRef): PathRef = {
+      val rawPath = ref.path.toString.replace(
+        File.separator + scalaJsVersion0 + File.separator,
+        File.separator
+      )
+      PathRef(os.Path(rawPath))
+    }
+    def sources = T.sources {
+      super.sources().flatMap { ref =>
+        Seq(updateRef(ref), ref)
+      }
+    }
+    def resources = T.sources {
+      super.resources().flatMap { ref =>
+        Seq(updateRef(ref), ref)
+      }
+    }
+  }
+}
 
 def ghOrg = "scala-cli"
 def ghName = "scala-js-cli"
@@ -340,23 +396,6 @@ object ci extends Module {
       else ("v" + version, false)
 
     Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
-  }
-
-  def testCli() = {
-    val tasks = scalaJsVersions.map { scalaJsVer =>
-      cli(scalaJsVer).standaloneLauncher.map((scalaJsVer, _))
-    }
-    T.command {
-      val workDir = T.dest
-      val launchers = T.sequence(tasks)()
-      for ((scalaJsVer, launcher) <- launchers) {
-        System.err.println(s"Testing Scala.JS $scalaJsVer")
-        val cwd = workDir / scalaJsVer
-        os.makeDir.all(cwd)
-        os.proc(bash, os.pwd / "scripts" / "test-cli.sh", launcher.path, scalaJsVer)
-          .call(cwd = cwd, stdin = os.Inherit, stdout = os.Inherit)
-      }
-    }
   }
 }
 
