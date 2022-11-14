@@ -47,7 +47,7 @@ object Scalajsld {
       sourceMap: Boolean = false,
       relativizeSourceMap: Option[URI] = None,
       checkIR: Boolean = false,
-      stdLib: Option[File] = None,
+      stdLib: Seq[File] = Nil,
       jsHeader: String = "",
       logLevel: Level = Level.Info
   )
@@ -164,12 +164,12 @@ object Scalajsld {
         .action { (x, c) => c.copy(relativizeSourceMap = Some(x.toURI)) }
         .text("Relativize source map with respect to given path (meaningful with -s)")
       opt[Unit]("noStdlib")
-        .action { (_, c) => c.copy(stdLib = None) }
+        .action { (_, c) => c.copy(stdLib = Nil) }
         .text("Don't automatically include Scala.js standard library")
-      opt[File]("stdlib")
+      opt[String]("stdlib")
         .valueName("<scala.js stdlib jar>")
         .hidden()
-        .action { (x, c) => c.copy(stdLib = Some(x)) }
+        .action { (x, c) => c.copy(stdLib = x.split(File.pathSeparator).map(new File(_)).toSeq) }
         .text("Location of Scala.js standard libarary. This is set by the " +
             "runner script and automatically prepended to the classpath. " +
             "Use -n to not include it.")
@@ -208,7 +208,7 @@ object Scalajsld {
     }
 
     for (options <- parser.parse(args, Options())) {
-      val classpath = (options.stdLib.toList ++ options.cp).map(_.toPath())
+      val classpath = (options.stdLib ++ options.cp).map(_.toPath())
       val moduleInitializers = options.moduleInitializers
 
       val semantics =
