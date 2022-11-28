@@ -194,7 +194,7 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
     def ivyDeps = super.ivyDeps() ++ Seq(
       ivy"org.scalameta::munit:0.7.29",
       ivy"com.lihaoyi::os-lib:0.8.1",
-      ivy"com.lihaoyi::pprint:0.8.0"
+      ivy"com.lihaoyi::pprint:0.8.1"
     )
     def testFramework = "munit.Framework"
 
