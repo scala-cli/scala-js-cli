@@ -123,7 +123,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
     )
   }
   def nativeImagePersist = System.getenv("CI") != null
-  def graalVmVersion = "22.1.0"
+  def graalVmVersion = "22.1.0.1"
   def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def moduleDeps() = Seq(
