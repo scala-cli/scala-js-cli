@@ -78,7 +78,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}
           path: artifacts/
@@ -112,7 +112,7 @@ jobs:
           ./mill -i "native-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}-static
           path: artifacts/
@@ -146,7 +146,7 @@ jobs:
           ./mill -i "native-mostly-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}-mostly-static
           path: artifacts/
