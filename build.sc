@@ -18,7 +18,7 @@ import scala.util.Properties.isWin
 
 def scalaJsCliVersion = "1.1.1-sc5"
 def scala213 = "2.13.10"
-def latestScalaJsVersion = "1.12.0"
+def latestScalaJsVersion = "1.13.0"
 def scalaJsVersions = Seq("1.9.0", "1.10.0", "1.10.1", "1.11.0", latestScalaJsVersion)
 
 object cli extends Cross[Cli](scalaJsVersions: _*)
