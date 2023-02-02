@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@b13323753322d76df763a86185a6ee23b4f3a122
+      - uses: VirtusLab/scala-cli-setup@9dafe2fb52ed67ee946e5f936d58f9e8b054b270
         with:
           jvm: "temurin:17"
       - name: Test CLI
@@ -32,7 +32,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@b13323753322d76df763a86185a6ee23b4f3a122
+      - uses: VirtusLab/scala-cli-setup@9dafe2fb52ed67ee946e5f936d58f9e8b054b270
         with:
           jvm: "temurin:17"
       - run: .github/scripts/gpg-setup.sh
@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0"]
+        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -78,7 +78,7 @@ jobs:
         if: runner.os == 'Windows'
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}
           path: artifacts/
@@ -95,7 +95,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0"]
+        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -112,7 +112,7 @@ jobs:
           ./mill -i "native-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}-static
           path: artifacts/
@@ -129,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0"]
+        scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -146,7 +146,7 @@ jobs:
           ./mill -i "native-mostly-static[$scalaJsVersion].copyToArtifacts" artifacts/
         env:
           scalaJsVersion: ${{ matrix.scalaJsVersion }}
-      - uses: actions/upload-artifact@v3.1.1
+      - uses: actions/upload-artifact@v3.1.2
         with:
           name: launcher-${{ matrix.os }}-mostly-static
           path: artifacts/

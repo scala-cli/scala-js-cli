@@ -1,5 +1,5 @@
 import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.0`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.22`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image-upload:0.1.19`
 import $ivy.`io.get-coursier::coursier-launcher:2.1.0-M2`
 
@@ -17,9 +17,9 @@ import scala.util.Properties.isWin
 
 
 def scalaJsCliVersion = "1.1.1-sc5"
-def scala213 = "2.13.8"
-def latestScalaJsVersion = "1.12.0"
-def scalaJsVersions = Seq("1.9.0", "1.10.0", "1.10.1", "1.11.0", latestScalaJsVersion)
+def scala213 = "2.13.10"
+def latestScalaJsVersion = "1.13.0"
+def scalaJsVersions = Seq("1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", latestScalaJsVersion)
 
 object cli extends Cross[Cli](scalaJsVersions: _*)
 
@@ -123,7 +123,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
     )
   }
   def nativeImagePersist = System.getenv("CI") != null
-  def graalVmVersion = "22.1.0"
+  def graalVmVersion = "22.3.1"
   def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def moduleDeps() = Seq(
@@ -193,7 +193,7 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
   object test extends Tests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       ivy"org.scalameta::munit:0.7.29",
-      ivy"com.lihaoyi::os-lib:0.8.1",
+      ivy"com.lihaoyi::os-lib:0.9.0",
       ivy"com.lihaoyi::pprint:0.8.1"
     )
     def testFramework = "munit.Framework"
