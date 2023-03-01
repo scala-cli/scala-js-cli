@@ -18,28 +18,18 @@ import scala.util.Properties.isWin
 
 def scalaJsCliVersion = "1.1.1-sc5"
 def scala213 = "2.13.10"
-def latestScalaJsVersion = "1.13.0"
-def scalaJsVersions = Seq("1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", latestScalaJsVersion)
+def scalaJsVersion = "1.13.0"
 
-object cli extends Cross[Cli](scalaJsVersions: _*)
+object cli extends Cli
 
-class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublishModule {
+class Cli extends ScalaModule with ScalaJsCliPublishModule {
   def scalaVersion = scala213
   def artifactName = "scalajs" + super.artifactName()
   def ivyDeps = super.ivyDeps() ++ Seq(
-    ivy"org.scala-js::scalajs-linker:$scalaJsVersion0",
+    ivy"org.scala-js::scalajs-linker:$scalaJsVersion",
     ivy"com.github.scopt::scopt:4.1.0"
   )
-  def millSourcePath   = super.millSourcePath / os.up
-
   def mainClass = Some("org.scalajs.cli.Scalajsld")
-
-  def sources = T.sources {
-    val extra =
-      if (Version(scalaJsVersion0) == Version("1.9.0")) millSourcePath / "scala-js-1.9"
-      else millSourcePath / "scala-js-1.10+"
-    super.sources() ++ Seq(PathRef(extra))
-  }
 
   def transitiveJars: T[Agg[PathRef]] = {
 
@@ -73,7 +63,6 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
       else None
 
     import coursier.launcher.{
-      AssemblyGenerator,
       BootstrapGenerator,
       ClassPathEntry,
       Parameters,
@@ -107,9 +96,8 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
   }
 }
 
-class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
+class ScalaJsCliNativeImage extends ScalaModule with NativeImage {
   def scalaVersion = scala213
-  def scalaJsVersion = scalaJsVersion0
 
   def nativeImageClassPath = T{
     runClasspath()
@@ -127,7 +115,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def moduleDeps() = Seq(
-    cli(scalaJsVersion0)
+    cli
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Seq(
     ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
@@ -146,13 +134,13 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   }
 }
 
-object native extends Cross[ScalaJsCliNativeImage](scalaJsVersions: _*)
+object native extends ScalaJsCliNativeImage
 
 def native0 = native
 
 def csDockerVersion = "2.1.0-M5-18-gfebf9838c"
 
-class ScalaJsCliStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
+class ScalaJsCliStaticNativeImage extends ScalaJsCliNativeImage {
   def nameSuffix = "-static"
   def buildHelperImage = T {
     os.proc("docker", "build", "-t", "scala-cli-base-musl:latest", ".")
@@ -173,9 +161,9 @@ class ScalaJsCliStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNat
     super.writeNativeImageScript(scriptDest, imageDest)()
   }
 }
-object `native-static` extends Cross[ScalaJsCliStaticNativeImage](scalaJsVersions: _*)
+object `native-static` extends ScalaJsCliStaticNativeImage
 
-class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
+class ScalaJsCliMostlyStaticNativeImage extends ScalaJsCliNativeImage {
   def nameSuffix = "-mostly-static"
   def nativeImageDockerParams = Some(
     NativeImage.linuxMostlyStaticParams(
@@ -184,10 +172,9 @@ class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJs
     )
   )
 }
-object `native-mostly-static` extends Cross[ScalaJsCliMostlyStaticNativeImage](scalaJsVersions: _*)
+object `native-mostly-static` extends ScalaJsCliMostlyStaticNativeImage
 
-object tests extends Cross[Tests](scalaJsVersions: _*)
-class Tests(val scalaJsVersion0: String) extends ScalaModule {
+object tests extends ScalaModule {
   def scalaVersion = scala213
 
   object test extends Tests {
@@ -206,7 +193,7 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
           val launcher = launcherTask().path
           val extraArgs = Seq(
             s"-Dtest.scala-js-cli.path=$launcher",
-            s"-Dtest.scala-js-cli.scala-js-version=$scalaJsVersion0"
+            s"-Dtest.scala-js-cli.scala-js-version=$scalaJsVersion"
           )
           args ++ extraArgs
         }
@@ -219,31 +206,13 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
     def test(args: String*) =
       jvm(args: _*)
     def jvm(args: String*) =
-      new TestHelper(cli(scalaJsVersion0).standaloneLauncher).test(args: _*)
+      new TestHelper(cli.standaloneLauncher).test(args: _*)
     def native(args: String*) =
-      new TestHelper(native0(scalaJsVersion0).nativeImage).test(args: _*)
+      new TestHelper(native0.nativeImage).test(args: _*)
     def nativeStatic(args: String*) =
-      new TestHelper(`native-static`(scalaJsVersion0).nativeImage).test(args: _*)
+      new TestHelper(`native-static`.nativeImage).test(args: _*)
     def nativeMostlyStatic(args: String*) =
-      new TestHelper(`native-mostly-static`(scalaJsVersion0).nativeImage).test(args: _*)
-
-    private def updateRef(ref: PathRef): PathRef = {
-      val rawPath = ref.path.toString.replace(
-        File.separator + scalaJsVersion0 + File.separator,
-        File.separator
-      )
-      PathRef(os.Path(rawPath))
-    }
-    def sources = T.sources {
-      super.sources().flatMap { ref =>
-        Seq(updateRef(ref), ref)
-      }
-    }
-    def resources = T.sources {
-      super.resources().flatMap { ref =>
-        Seq(updateRef(ref), ref)
-      }
-    }
+      new TestHelper(`native-mostly-static`.nativeImage).test(args: _*)
   }
 }
 
