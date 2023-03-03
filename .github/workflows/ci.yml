@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
     steps:
@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@9dafe2fb52ed67ee946e5f936d58f9e8b054b270
+      - uses: VirtusLab/scala-cli-setup@1834c15b7533fd3a4528dc0cb9777922e83b5372
         with:
           jvm: "temurin:17"
       - name: Test CLI
@@ -25,14 +25,14 @@ jobs:
 
   publish:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: github.event_name == 'push'
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@9dafe2fb52ed67ee946e5f936d58f9e8b054b270
+      - uses: VirtusLab/scala-cli-setup@1834c15b7533fd3a4528dc0cb9777922e83b5372
         with:
           jvm: "temurin:17"
       - run: .github/scripts/gpg-setup.sh
@@ -50,10 +50,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-20.04, windows-latest, macos-latest]
         scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
@@ -91,13 +91,13 @@ jobs:
 
   generate-static-launcher:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
@@ -125,13 +125,13 @@ jobs:
 
   generate-mostly-static-launcher:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       fail-fast: false
       matrix:
         scalaJsVersion: ["1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", "1.13.0"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
