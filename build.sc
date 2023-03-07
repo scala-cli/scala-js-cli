@@ -363,6 +363,8 @@ object ci extends Module {
       else ("v" + version, false)
 
     Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    if(version != scalaJsVersion) // when we release `0.13.0.1` we should also update native launchers in tag `0.13.0`
+      Upload.upload("scala-cli", "scala-js-cli", ghToken, s"v$scalaJsVersion", dryRun = false, overwrite = true)(launchers: _*)
   }
 }
 
