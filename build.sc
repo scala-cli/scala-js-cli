@@ -220,7 +220,7 @@ trait ScalaJsCliPublishModule extends PublishModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
     description = artifactName(),
-    organization = "io.github.alexarchambault.tmp",
+    organization = "org.virtuslab.scala-cli",
     url = s"https://github.com/$ghOrg/$ghName",
     licenses = Seq(License.`BSD-3-Clause`),
     versionControl = VersionControl.github(ghOrg, ghName),
@@ -324,8 +324,8 @@ object ci extends Module {
       set.head
     }
     val publisher = new scalalib.publish.SonatypePublisher(
-      uri = "https://s01.oss.sonatype.org/service/local",
-      snapshotUri = "https://s01.oss.sonatype.org/content/repositories/snapshots",
+      uri = "https://oss.sonatype.org/service/local",
+      snapshotUri = "https://oss.sonatype.org/content/repositories/snapshots",
       credentials = credentials,
       signed = true,
       // format: off
