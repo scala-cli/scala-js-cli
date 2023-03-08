@@ -125,7 +125,7 @@ trait ScalaJsCliNativeImage extends ScalaModule with NativeImage {
     val _ = Upload.copyLauncher(
       nativeImage().path,
       directory,
-      s"scala-js-ld-$scalaJsVersion",
+      s"scala-js-ld",
       compress = true,
       suffix = nameSuffix
     )
