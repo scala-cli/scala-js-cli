@@ -220,7 +220,7 @@ trait ScalaJsCliPublishModule extends PublishModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
     description = artifactName(),
-    organization = "io.github.alexarchambault.tmp",
+    organization = "org.virtuslab.scala-cli",
     url = s"https://github.com/$ghOrg/$ghName",
     licenses = Seq(License.`BSD-3-Clause`),
     versionControl = VersionControl.github(ghOrg, ghName),
@@ -324,8 +324,8 @@ object ci extends Module {
       set.head
     }
     val publisher = new scalalib.publish.SonatypePublisher(
-      uri = "https://s01.oss.sonatype.org/service/local",
-      snapshotUri = "https://s01.oss.sonatype.org/content/repositories/snapshots",
+      uri = "https://oss.sonatype.org/service/local",
+      snapshotUri = "https://oss.sonatype.org/content/repositories/snapshots",
       credentials = credentials,
       signed = true,
       // format: off
@@ -363,6 +363,8 @@ object ci extends Module {
       else ("v" + version, false)
 
     Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    if(version != scalaJsVersion) // when we release `0.13.0.1` we should also update native launchers in tag `0.13.0`
+      Upload.upload("scala-cli", "scala-js-cli", ghToken, s"v$scalaJsVersion", dryRun = false, overwrite = true)(launchers: _*)
   }
 }
 
