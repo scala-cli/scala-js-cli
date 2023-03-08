@@ -214,7 +214,7 @@ object tests extends ScalaModule {
   }
 }
 
-def ghOrg = "scala-cli"
+def ghOrg = "virtuslab"
 def ghName = "scala-js-cli"
 trait ScalaJsCliPublishModule extends PublishModule {
   import mill.scalalib.publish._
@@ -362,9 +362,9 @@ object ci extends Module {
       if (version.endsWith("-SNAPSHOT")) ("launchers", true)
       else ("v" + version, false)
 
-    Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    Upload.upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
     if(version != scalaJsVersion) // when we release `0.13.0.1` we should also update native launchers in tag `0.13.0`
-      Upload.upload("scala-cli", "scala-js-cli", ghToken, s"v$scalaJsVersion", dryRun = false, overwrite = true)(launchers: _*)
+      Upload.upload(ghOrg, ghName, ghToken, s"v$scalaJsVersion", dryRun = false, overwrite = true)(launchers: _*)
   }
 }
 
