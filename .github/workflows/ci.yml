@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@1834c15b7533fd3a4528dc0cb9777922e83b5372
+      - uses: VirtusLab/scala-cli-setup@d37cecaf2c23ee668ec7e5da04eb6da66ae9fab6
         with:
           jvm: "temurin:17"
       - name: Test CLI
@@ -32,7 +32,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: VirtusLab/scala-cli-setup@1834c15b7533fd3a4528dc0cb9777922e83b5372
+      - uses: VirtusLab/scala-cli-setup@d37cecaf2c23ee668ec7e5da04eb6da66ae9fab6
         with:
           jvm: "temurin:17"
       - run: .github/scripts/gpg-setup.sh
