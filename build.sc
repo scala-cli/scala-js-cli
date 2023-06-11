@@ -1,4 +1,4 @@
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.0`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.1`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image-upload:0.1.19`
 import $ivy.`io.get-coursier::coursier-launcher:2.1.0-M2`
@@ -18,28 +18,16 @@ import scala.util.Properties.isWin
 
 def scalaJsCliVersion = "1.1.1-sc5"
 def scala213 = "2.13.10"
-def latestScalaJsVersion = "1.13.1"
-def scalaJsVersions = Seq("1.9.0", "1.10.0", "1.10.1", "1.11.0", "1.12.0", latestScalaJsVersion)
-
-object cli extends Cross[Cli](scalaJsVersions: _*)
-
-class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublishModule {
+def scalaJsVersion = "1.13.1"
+object cli extends Cli
+trait Cli extends ScalaModule with ScalaJsCliPublishModule {
   def scalaVersion = scala213
   def artifactName = "scalajs" + super.artifactName()
   def ivyDeps = super.ivyDeps() ++ Seq(
-    ivy"org.scala-js::scalajs-linker:$scalaJsVersion0",
+    ivy"org.scala-js::scalajs-linker:$scalaJsVersion",
     ivy"com.github.scopt::scopt:4.1.0"
   )
-  def millSourcePath   = super.millSourcePath / os.up
-
   def mainClass = Some("org.scalajs.cli.Scalajsld")
-
-  def sources = T.sources {
-    val extra =
-      if (Version(scalaJsVersion0) == Version("1.9.0")) millSourcePath / "scala-js-1.9"
-      else millSourcePath / "scala-js-1.10+"
-    super.sources() ++ Seq(PathRef(extra))
-  }
 
   def transitiveJars: T[Agg[PathRef]] = {
 
@@ -73,7 +61,6 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
       else None
 
     import coursier.launcher.{
-      AssemblyGenerator,
       BootstrapGenerator,
       ClassPathEntry,
       Parameters,
@@ -107,9 +94,8 @@ class Cli(val scalaJsVersion0: String) extends ScalaModule with ScalaJsCliPublis
   }
 }
 
-class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule with NativeImage {
+trait ScalaJsCliNativeImage extends ScalaModule with NativeImage {
   def scalaVersion = scala213
-  def scalaJsVersion = scalaJsVersion0
 
   def nativeImageClassPath = T{
     runClasspath()
@@ -127,7 +113,7 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
   def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
   def nativeImageName = "scala-js-ld"
   def moduleDeps() = Seq(
-    cli(scalaJsVersion0)
+    cli
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Seq(
     ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
@@ -139,20 +125,20 @@ class ScalaJsCliNativeImage(val scalaJsVersion0: String) extends ScalaModule wit
     val _ = Upload.copyLauncher(
       nativeImage().path,
       directory,
-      s"scala-js-ld-$scalaJsVersion",
+      s"scala-js-ld",
       compress = true,
       suffix = nameSuffix
     )
   }
 }
 
-object native extends Cross[ScalaJsCliNativeImage](scalaJsVersions: _*)
+object native extends ScalaJsCliNativeImage
 
 def native0 = native
 
 def csDockerVersion = "2.1.0-M5-18-gfebf9838c"
 
-class ScalaJsCliStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
+trait ScalaJsCliStaticNativeImage extends ScalaJsCliNativeImage {
   def nameSuffix = "-static"
   def buildHelperImage = T {
     os.proc("docker", "build", "-t", "scala-cli-base-musl:latest", ".")
@@ -173,9 +159,9 @@ class ScalaJsCliStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNat
     super.writeNativeImageScript(scriptDest, imageDest)()
   }
 }
-object `native-static` extends Cross[ScalaJsCliStaticNativeImage](scalaJsVersions: _*)
+object `native-static` extends ScalaJsCliStaticNativeImage
 
-class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJsCliNativeImage(scalaJsVersion0) {
+trait ScalaJsCliMostlyStaticNativeImage extends ScalaJsCliNativeImage {
   def nameSuffix = "-mostly-static"
   def nativeImageDockerParams = Some(
     NativeImage.linuxMostlyStaticParams(
@@ -184,16 +170,15 @@ class ScalaJsCliMostlyStaticNativeImage(scalaJsVersion0: String) extends ScalaJs
     )
   )
 }
-object `native-mostly-static` extends Cross[ScalaJsCliMostlyStaticNativeImage](scalaJsVersions: _*)
+object `native-mostly-static` extends ScalaJsCliMostlyStaticNativeImage
 
-object tests extends Cross[Tests](scalaJsVersions: _*)
-class Tests(val scalaJsVersion0: String) extends ScalaModule {
+object tests extends ScalaModule {
   def scalaVersion = scala213
 
   object test extends Tests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       ivy"org.scalameta::munit:0.7.29",
-      ivy"com.lihaoyi::os-lib:0.9.0",
+      ivy"com.lihaoyi::os-lib:0.9.1",
       ivy"com.lihaoyi::pprint:0.8.1"
     )
     def testFramework = "munit.Framework"
@@ -206,7 +191,7 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
           val launcher = launcherTask().path
           val extraArgs = Seq(
             s"-Dtest.scala-js-cli.path=$launcher",
-            s"-Dtest.scala-js-cli.scala-js-version=$scalaJsVersion0"
+            s"-Dtest.scala-js-cli.scala-js-version=$scalaJsVersion"
           )
           args ++ extraArgs
         }
@@ -219,41 +204,23 @@ class Tests(val scalaJsVersion0: String) extends ScalaModule {
     def test(args: String*) =
       jvm(args: _*)
     def jvm(args: String*) =
-      new TestHelper(cli(scalaJsVersion0).standaloneLauncher).test(args: _*)
+      new TestHelper(cli.standaloneLauncher).test(args: _*)
     def native(args: String*) =
-      new TestHelper(native0(scalaJsVersion0).nativeImage).test(args: _*)
+      new TestHelper(native0.nativeImage).test(args: _*)
     def nativeStatic(args: String*) =
-      new TestHelper(`native-static`(scalaJsVersion0).nativeImage).test(args: _*)
+      new TestHelper(`native-static`.nativeImage).test(args: _*)
     def nativeMostlyStatic(args: String*) =
-      new TestHelper(`native-mostly-static`(scalaJsVersion0).nativeImage).test(args: _*)
-
-    private def updateRef(ref: PathRef): PathRef = {
-      val rawPath = ref.path.toString.replace(
-        File.separator + scalaJsVersion0 + File.separator,
-        File.separator
-      )
-      PathRef(os.Path(rawPath))
-    }
-    def sources = T.sources {
-      super.sources().flatMap { ref =>
-        Seq(updateRef(ref), ref)
-      }
-    }
-    def resources = T.sources {
-      super.resources().flatMap { ref =>
-        Seq(updateRef(ref), ref)
-      }
-    }
+      new TestHelper(`native-mostly-static`.nativeImage).test(args: _*)
   }
 }
 
-def ghOrg = "scala-cli"
+def ghOrg = "virtuslab"
 def ghName = "scala-js-cli"
 trait ScalaJsCliPublishModule extends PublishModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
     description = artifactName(),
-    organization = "io.github.alexarchambault.tmp",
+    organization = "org.virtuslab.scala-cli",
     url = s"https://github.com/$ghOrg/$ghName",
     licenses = Seq(License.`BSD-3-Clause`),
     versionControl = VersionControl.github(ghOrg, ghName),
@@ -357,8 +324,8 @@ object ci extends Module {
       set.head
     }
     val publisher = new scalalib.publish.SonatypePublisher(
-      uri = "https://s01.oss.sonatype.org/service/local",
-      snapshotUri = "https://s01.oss.sonatype.org/content/repositories/snapshots",
+      uri = "https://oss.sonatype.org/service/local",
+      snapshotUri = "https://oss.sonatype.org/content/repositories/snapshots",
       credentials = credentials,
       signed = true,
       // format: off
@@ -395,7 +362,9 @@ object ci extends Module {
       if (version.endsWith("-SNAPSHOT")) ("launchers", true)
       else ("v" + version, false)
 
-    Upload.upload("scala-cli", "scala-js-cli", ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    Upload.upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    if(version != scalaJsVersion && !version.endsWith("-SNAPSHOT")) // when we release `0.13.0.1` we should also update native launchers in tag `0.13.0`
+      Upload.upload(ghOrg, ghName, ghToken, s"v$scalaJsVersion", dryRun = false, overwrite = true)(launchers: _*)
   }
 }
 
