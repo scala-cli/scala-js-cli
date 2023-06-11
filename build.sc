@@ -175,7 +175,7 @@ object `native-mostly-static` extends ScalaJsCliMostlyStaticNativeImage
 object tests extends ScalaModule {
   def scalaVersion = scala213
 
-  object test extends Tests {
+  object test extends ScalaTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       ivy"org.scalameta::munit:0.7.29",
       ivy"com.lihaoyi::os-lib:0.9.1",
