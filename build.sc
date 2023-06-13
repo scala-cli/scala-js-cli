@@ -1,5 +1,5 @@
-import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.3.0`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
+import $ivy.`de.tototec::de.tobiasroeser.mill.vcs.version::0.4.0`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.25`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image-upload:0.1.19`
 import $ivy.`io.get-coursier::coursier-launcher:2.1.0-M2`
 
@@ -175,7 +175,7 @@ object `native-mostly-static` extends ScalaJsCliMostlyStaticNativeImage
 object tests extends ScalaModule {
   def scalaVersion = scala213
 
-  object test extends Tests {
+  object test extends ScalaTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       ivy"org.scalameta::munit:0.7.29",
       ivy"com.lihaoyi::os-lib:0.9.1",
