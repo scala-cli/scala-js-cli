@@ -26,7 +26,7 @@ import java.io.File
 import java.net.URI
 import java.nio.file.Path
 import java.lang.NoClassDefFoundError
-import org.scalajs.cli.internal.ModuleSplitStyleParser
+import org.scalajs.cli.internal.{EsVersionParser, ModuleSplitStyleParser}
 
 object Scalajsld {
 
@@ -153,6 +153,9 @@ object Scalajsld {
       opt[Unit]("es2015")
         .action { (_, c) => c.copy(esFeatures = c.esFeatures.withESVersion(ESVersion.ES2015)) }
         .text("Use ECMAScript 2015")
+      opt[String]("esVersion")
+        .action { (esV, c) => c.copy(esFeatures = c.esFeatures.withESVersion(EsVersionParser.parse(esV))) }
+        .text("EsVersion " + EsVersionParser.All.mkString("(", ", ", ")"))
       opt[ModuleKind]('k', "moduleKind")
         .action { (kind, c) => c.copy(moduleKind = kind) }
         .text("Module kind " + ModuleKind.All.mkString("(", ", ", ")"))
