@@ -6,7 +6,6 @@
 **                          |/____/                                                    **
 \*                                                                                     */
 
-
 package org.scalajs.cli
 
 import org.scalajs.ir.ScalaJSVersions
@@ -52,7 +51,10 @@ object Scalajsld {
       logLevel: Level = Level.Info
   )
 
-  private def moduleInitializer(s: String, hasArgs: Boolean): ModuleInitializer = {
+  private def moduleInitializer(
+      s: String,
+      hasArgs: Boolean
+  ): ModuleInitializer = {
     val lastDot = s.lastIndexOf('.')
     if (lastDot < 0)
       throw new IllegalArgumentException(s"$s is not a valid main method")
@@ -67,21 +69,35 @@ object Scalajsld {
   private implicit object ModuleKindRead extends scopt.Read[ModuleKind] {
     val arity = 1
     val reads = { (s: String) =>
-      ModuleKind.All.find(_.toString() == s).getOrElse(
-          throw new IllegalArgumentException(s"$s is not a valid module kind"))
+      ModuleKind.All
+        .find(_.toString() == s)
+        .getOrElse(
+          throw new IllegalArgumentException(s"$s is not a valid module kind")
+        )
     }
   }
 
   private object ModuleSplitStyleRead {
-    val All = List(ModuleSplitStyle.FewestModules.toString, ModuleSplitStyle.SmallestModules.toString, "SmallModulesFor")
+    val All = List(
+      ModuleSplitStyle.FewestModules.toString,
+      ModuleSplitStyle.SmallestModules.toString,
+      "SmallModulesFor"
+    )
 
-    def moduleSplitStyleRead(splitStyle: String, modulePackages: Seq[String]): ModuleSplitStyle =
+    def moduleSplitStyleRead(
+        splitStyle: String,
+        modulePackages: Seq[String]
+    ): ModuleSplitStyle =
       try {
-        (new ModuleSplitStyleParser).parse(splitStyle, modulePackages.toArray).underlying
-      }
-      catch {
+        (new ModuleSplitStyleParser)
+          .parse(splitStyle, modulePackages.toArray)
+          .underlying
+      } catch {
         case e: NoClassDefFoundError =>
-          throw new IllegalArgumentException(s"$splitStyle is not a valid module split style", e.getCause)
+          throw new IllegalArgumentException(
+            s"$splitStyle is not a valid module split style",
+            e.getCause
+          )
       }
   }
 
@@ -121,27 +137,44 @@ object Scalajsld {
       // "By default, undefined behaviors are in Fatal mode for fastLinkJS and in Unchecked mode for fullLinkJS"
       // taken from: https://www.scala-js.org/doc/semantics.html#undefined-behaviors
       opt[Unit]('f', "fastOpt")
-        .action { (_, c) => c.copy(noOpt = false, fullOpt = false, semantics = Semantics.Defaults) }
+        .action { (_, c) =>
+          c.copy(noOpt = false, fullOpt = false, semantics = Semantics.Defaults)
+        }
         .text("Optimize code (this is the default)")
       opt[Unit]('n', "noOpt")
         .action { (_, c) => c.copy(noOpt = true, fullOpt = false) }
         .text("Don't optimize code")
       opt[String]("moduleSplitStyle")
         .action { (x, c) => c.copy(moduleSplitStyle = x) }
-        .text("Module splitting style " + ModuleSplitStyleRead.All.mkString("(", ", ", ")"))
+        .text(
+          "Module splitting style " + ModuleSplitStyleRead.All
+            .mkString("(", ", ", ")")
+        )
       opt[Seq[String]]("smallModuleForPackages")
         .valueName("<package1>,<package2>...")
         .action((x, c) => c.copy(smallModuleForPackages = x))
-        .text("Create as many small modules as possible for the classes in the passed packages and their subpackages.")
+        .text(
+          "Create as many small modules as possible for the classes in the passed packages and their subpackages."
+        )
       opt[String]("jsFilePattern")
-        .action { (x, c) => c.copy(outputPatterns = OutputPatterns.fromJSFile(x)) }
-        .text("Pattern for JS file names (default: `%s.js`). " +
+        .action { (x, c) =>
+          c.copy(outputPatterns = OutputPatterns.fromJSFile(x))
+        }
+        .text(
+          "Pattern for JS file names (default: `%s.js`). " +
             "Expects a printf-style pattern with a single placeholder for the module ID. " +
-            "A typical use case is changing the file extension, e.g. `%.mjs` for Node.js modules.")
+            "A typical use case is changing the file extension, e.g. `%.mjs` for Node.js modules."
+        )
       // "By default, undefined behaviors are in Fatal mode for fastLinkJS and in Unchecked mode for fullLinkJS"
       // taken from: https://www.scala-js.org/doc/semantics.html#undefined-behaviors
       opt[Unit]('u', "fullOpt")
-        .action { (_, c) => c.copy(noOpt = false, fullOpt = true, semantics = Semantics.Defaults.optimized) }
+        .action { (_, c) =>
+          c.copy(
+            noOpt = false,
+            fullOpt = true,
+            semantics = Semantics.Defaults.optimized
+          )
+        }
         .text("Fully optimize code (uses Google Closure Compiler)")
       opt[Unit]('p', "prettyPrint")
         .action { (_, c) => c.copy(prettyPrint = true) }
@@ -150,15 +183,21 @@ object Scalajsld {
         .action { (_, c) => c.copy(sourceMap = true) }
         .text("Produce a source map for the produced code")
       opt[Unit]("compliantAsInstanceOfs")
-        .action { (_, c) => c.copy(semantics =
-          c.semantics.withAsInstanceOfs(Compliant))
+        .action { (_, c) =>
+          c.copy(semantics = c.semantics.withAsInstanceOfs(Compliant))
         }
         .text("Use compliant asInstanceOfs")
       opt[Unit]("es2015")
-        .action { (_, c) => c.copy(esFeatures = c.esFeatures.withESVersion(ESVersion.ES2015)) }
+        .action { (_, c) =>
+          c.copy(esFeatures = c.esFeatures.withESVersion(ESVersion.ES2015))
+        }
         .text("Use ECMAScript 2015")
       opt[String]("esVersion")
-        .action { (esV, c) => c.copy(esFeatures = c.esFeatures.withESVersion(EsVersionParser.parse(esV))) }
+        .action { (esV, c) =>
+          c.copy(esFeatures =
+            c.esFeatures.withESVersion(EsVersionParser.parse(esV))
+          )
+        }
         .text("EsVersion " + EsVersionParser.All.mkString("(", ", ", ")"))
       opt[ModuleKind]('k', "moduleKind")
         .action { (kind, c) => c.copy(moduleKind = kind) }
@@ -169,19 +208,25 @@ object Scalajsld {
       opt[File]('r', "relativizeSourceMap")
         .valueName("<path>")
         .action { (x, c) => c.copy(relativizeSourceMap = Some(x.toURI)) }
-        .text("Relativize source map with respect to given path (meaningful with -s)")
+        .text(
+          "Relativize source map with respect to given path (meaningful with -s)"
+        )
       opt[Unit]("noStdlib")
         .action { (_, c) => c.copy(stdLib = Nil) }
         .text("Don't automatically include Scala.js standard library")
       opt[String]("stdlib")
         .valueName("<scala.js stdlib jar>")
         .hidden()
-        .action { (x, c) => c.copy(stdLib = x.split(File.pathSeparator).map(new File(_)).toSeq) }
-        .text("Location of Scala.js standard libarary. This is set by the " +
+        .action { (x, c) =>
+          c.copy(stdLib = x.split(File.pathSeparator).map(new File(_)).toSeq)
+        }
+        .text(
+          "Location of Scala.js standard libarary. This is set by the " +
             "runner script and automatically prepended to the classpath. " +
-            "Use -n to not include it.")
+            "Use -n to not include it."
+        )
       opt[String]("jsHeader")
-        .action { (jsHeader, c) => c.copy(jsHeader = jsHeader)}
+        .action { (jsHeader, c) => c.copy(jsHeader = jsHeader) }
         .text("A header that will be added at the top of generated .js files")
       opt[Unit]('d', "debug")
         .action { (_, c) => c.copy(logLevel = Level.Debug) }
@@ -201,8 +246,10 @@ object Scalajsld {
         .text("prints this usage text")
       checkConfig { c =>
         if (c.output.isDefined) {
-          reportWarning("using a single file as output (--output) is deprecated since Scala.js 1.3.0." +
-            " Use --outputDir instead.")
+          reportWarning(
+            "using a single file as output (--output) is deprecated since Scala.js 1.3.0." +
+              " Use --outputDir instead."
+          )
         }
 
         if (c.outputDir.isDefined == c.output.isDefined)
@@ -221,7 +268,10 @@ object Scalajsld {
       val semantics =
         if (options.fullOpt) options.semantics.optimized
         else options.semantics
-      val moduleSplitStyle = ModuleSplitStyleRead.moduleSplitStyleRead(options.moduleSplitStyle, options.smallModuleForPackages)
+      val moduleSplitStyle = ModuleSplitStyleRead.moduleSplitStyleRead(
+        options.moduleSplitStyle,
+        options.smallModuleForPackages
+      )
 
       val config = StandardConfig()
         .withSemantics(semantics)
@@ -249,10 +299,24 @@ object Scalajsld {
         .flatMap { irFiles =>
           (options.output, options.outputDir) match {
             case (Some(jsFile), None) =>
-              (DeprecatedLinkerAPI: DeprecatedLinkerAPI).link(linker, irFiles.toList, moduleInitializers, jsFile, logger)
+              (DeprecatedLinkerAPI: DeprecatedLinkerAPI).link(
+                linker,
+                irFiles.toList,
+                moduleInitializers,
+                jsFile,
+                logger
+              )
             case (None, Some(outputDir)) =>
-              linker.link(irFiles, moduleInitializers, PathOutputDirectory(outputDir.toPath()), logger)
-            case _ => throw new AssertionError("Either output or outputDir have to be defined.")
+              linker.link(
+                irFiles,
+                moduleInitializers,
+                PathOutputDirectory(outputDir.toPath()),
+                logger
+              )
+            case _ =>
+              throw new AssertionError(
+                "Either output or outputDir have to be defined."
+              )
           }
         }
       Await.result(result, Duration.Inf)
@@ -261,22 +325,26 @@ object Scalajsld {
 
   // Covers deprecated api with not deprecated method. Suppresses warning.
   private abstract class DeprecatedLinkerAPI {
-    def link(linker: Linker,
+    def link(
+        linker: Linker,
         irFiles: Seq[IRFile],
         moduleInitializers: Seq[ModuleInitializer],
         linkerOutputFile: File,
-        logger: Logger): Future[Unit]
+        logger: Logger
+    ): Future[Unit]
   }
 
   private object DeprecatedLinkerAPI extends DeprecatedLinkerAPI {
     def apply(): DeprecatedLinkerAPI = this
 
     @deprecated("Deprecate to silence warnings", "never/always")
-    def link(linker: Linker,
+    def link(
+        linker: Linker,
         irFiles: Seq[IRFile],
         moduleInitializers: Seq[ModuleInitializer],
         linkerOutputFile: File,
-        logger: Logger): Future[Unit] = {
+        logger: Logger
+    ): Future[Unit] = {
       val js = linkerOutputFile.toPath()
       val sm = js.resolveSibling(js.getFileName().toString() + ".map")
 

@@ -6,7 +6,6 @@
 **                          |/____/                                                    **
 \*                                                                                     */
 
-
 package org.scalajs.cli
 
 import org.scalajs.ir.ScalaJSVersions
@@ -49,7 +48,9 @@ object Scalajsp {
         .action { (x, c) => c.copy(jar = Some(x)) }
         .text("Read *.sjsir file(s) from the given JAR.")
       opt[Unit]('s', "supported")
-        .action { (_,_) => printSupported(); exit(0) }
+        .action { (_, _) =>
+          printSupported(); exit(0)
+        }
         .text("Show supported Scala.js IR versions")
       version("version")
         .abbr("v")
@@ -65,11 +66,13 @@ object Scalajsp {
       options <- parser.parse(args, Options())
       fileName <- options.fileNames
     } {
-      val vfile = options.jar.map { jar =>
-        readFromJar(jar, fileName)
-      }.getOrElse {
-        readFromFile(fileName)
-      }
+      val vfile = options.jar
+        .map { jar =>
+          readFromJar(jar, fileName)
+        }
+        .getOrElse {
+          readFromFile(fileName)
+        }
 
       displayFileContent(Await.result(vfile, Duration.Inf), options)
     }
@@ -116,19 +119,25 @@ object Scalajsp {
      */
 
     def findRequestedClass(sjsirFiles: Seq[IRFile]): Future[IRFile] = {
-      Future.traverse(sjsirFiles) { irFile =>
-        val ir = IRFileImpl.fromIRFile(irFile)
-        ir.entryPointsInfo.map { i =>
-          if (i.className.nameString == name) Success(Some(ir))
-          else Success(None)
-        }.recover { case t => Failure(t) }
-      }.map { irs =>
-        irs.collectFirst {
-          case Success(Some(f)) => f
-        }.getOrElse {
-          fail(s"No such class in jar: $name")
+      Future
+        .traverse(sjsirFiles) { irFile =>
+          val ir = IRFileImpl.fromIRFile(irFile)
+          ir.entryPointsInfo
+            .map { i =>
+              if (i.className.nameString == name) Success(Some(ir))
+              else Success(None)
+            }
+            .recover { case t => Failure(t) }
         }
-      }
+        .map { irs =>
+          irs
+            .collectFirst { case Success(Some(f)) =>
+              f
+            }
+            .getOrElse {
+              fail(s"No such class in jar: $name")
+            }
+        }
     }
 
     val cache = StandardImpl.irFileCache().newCache

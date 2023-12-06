@@ -26,7 +26,18 @@ class Tests extends munit.FunSuite {
         |""".stripMargin
     )
 
-    val scalaJsLibraryCp = os.proc("cs", "fetch", "--classpath", "-E", "org.scala-lang:scala-library", s"org.scala-js::scalajs-library:$scalaJsVersion").call(cwd = dir).out.trim()
+    val scalaJsLibraryCp = os
+      .proc(
+        "cs",
+        "fetch",
+        "--classpath",
+        "-E",
+        "org.scala-lang:scala-library",
+        s"org.scala-js::scalajs-library:$scalaJsVersion"
+      )
+      .call(cwd = dir)
+      .out
+      .trim()
 
     os.makeDir.all(dir / "bin")
     os.proc(
@@ -37,16 +48,26 @@ class Tests extends munit.FunSuite {
       "-classpath",
       scalaJsLibraryCp,
       s"-Xplugin:${os.proc("cs", "fetch", "--intransitive", s"org.scala-js:scalajs-compiler_2.13.6:$scalaJsVersion").call(cwd = dir).out.trim()}",
-      "-d", "bin", "foo.scala"
+      "-d",
+      "bin",
+      "foo.scala"
     ).call(cwd = dir, stdin = os.Inherit, stdout = os.Inherit)
 
-    val res = os.proc(
-      launcher,
-      "--stdlib",
-      scalaJsLibraryCp,
-      "-s", "-o", "test.js", "-mm", "Foo.main", "bin"
-    ).call(cwd = dir, stderr = os.Pipe)
-    val expectedInOutput = "Warning: using a single file as output (--output) is deprecated since Scala.js 1.3.0. Use --outputDir instead."
+    val res = os
+      .proc(
+        launcher,
+        "--stdlib",
+        scalaJsLibraryCp,
+        "-s",
+        "-o",
+        "test.js",
+        "-mm",
+        "Foo.main",
+        "bin"
+      )
+      .call(cwd = dir, stderr = os.Pipe)
+    val expectedInOutput =
+      "Warning: using a single file as output (--output) is deprecated since Scala.js 1.3.0. Use --outputDir instead."
     assert(res.err.text().contains(expectedInOutput))
 
     val testJsSize = os.size(dir / "test.js")
@@ -80,9 +101,10 @@ class Tests extends munit.FunSuite {
     }
     assert(jsFileCount > 1)
 
-    val splitRunRes = os.proc("node", "test-output/main.js")
+    val splitRunRes = os
+      .proc("node", "test-output/main.js")
       .call(cwd = dir)
-    val splitRunOutput =splitRunRes.out.trim()
+    val splitRunOutput = splitRunRes.out.trim()
     assert(splitRunOutput == "asdf 2")
   }
 }
