@@ -118,8 +118,10 @@ object Scalajsld {
         .valueName("<dir>")
         .action { (x, c) => c.copy(outputDir = Some(x)) }
         .text("Output directory of linker (required)")
+      // "By default, undefined behaviors are in Fatal mode for fastLinkJS and in Unchecked mode for fullLinkJS"
+      // taken from: https://www.scala-js.org/doc/semantics.html#undefined-behaviors
       opt[Unit]('f', "fastOpt")
-        .action { (_, c) => c.copy(noOpt = false, fullOpt = false) }
+        .action { (_, c) => c.copy(noOpt = false, fullOpt = false, semantics = Semantics.Defaults) }
         .text("Optimize code (this is the default)")
       opt[Unit]('n', "noOpt")
         .action { (_, c) => c.copy(noOpt = true, fullOpt = false) }
@@ -136,8 +138,10 @@ object Scalajsld {
         .text("Pattern for JS file names (default: `%s.js`). " +
             "Expects a printf-style pattern with a single placeholder for the module ID. " +
             "A typical use case is changing the file extension, e.g. `%.mjs` for Node.js modules.")
+      // "By default, undefined behaviors are in Fatal mode for fastLinkJS and in Unchecked mode for fullLinkJS"
+      // taken from: https://www.scala-js.org/doc/semantics.html#undefined-behaviors
       opt[Unit]('u', "fullOpt")
-        .action { (_, c) => c.copy(noOpt = false, fullOpt = true) }
+        .action { (_, c) => c.copy(noOpt = false, fullOpt = true, semantics = Semantics.Defaults.optimized) }
         .text("Fully optimize code (uses Google Closure Compiler)")
       opt[Unit]('p', "prettyPrint")
         .action { (_, c) => c.copy(prettyPrint = true) }
